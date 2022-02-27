@@ -22,12 +22,111 @@ public class Trie {
 	 * @return Root of trie with all words inserted from the input array
 	 */
 	public static TrieNode buildTrie(String[] allWords) {
-		/** COMPLETE THIS METHOD **/
 		
-		// FOLLOWING LINE IS A PLACEHOLDER TO ENSURE COMPILATION
-		// MODIFY IT AS NEEDED FOR YOUR IMPLEMENTATION
-		return null;
+		TrieNode root = new TrieNode(null,null,null);
+		
+		if (allWords==null) {return root;}
+		
+		for(int i=0; i < allWords.length; i++) {
+		
+			Indexes newIndex = new Indexes(i,(short) 0, (short)(allWords[i].length()-1));
+			TrieNode newNode = new TrieNode(newIndex, null, null); 
+			
+			if(root.firstChild == null) {
+				root.firstChild=newNode;
+				continue;
+			}
+			
+			TrieNode prev = root;
+			TrieNode ptr = root.firstChild;
+			
+			while(ptr != null) {
+				
+				int common=prefixEnd(newNode,ptr,allWords);
+				
+				if(common>newNode.substr.startIndex-1) {
+					
+					//internal node
+					if(ptr.firstChild != null) {
+						
+						if((short)common>=ptr.substr.endIndex) {
+						newNode.substr.startIndex = (short)(ptr.substr.endIndex+1);
+						prev=ptr;
+						ptr=ptr.firstChild;
+						continue;
+						}
+						else {
+							Indexes sp = new Indexes(ptr.substr.wordIndex,ptr.substr.startIndex,(short)common);
+							TrieNode smallerpref= new TrieNode(sp,ptr,ptr.sibling);
+							if(prev.firstChild == ptr) {
+								prev.firstChild=smallerpref;
+							}
+							else {
+								prev.sibling=smallerpref;
+							}
+							ptr.substr.startIndex=(short)(smallerpref.substr.endIndex + 1);
+							newNode.substr.startIndex=(short)(smallerpref.substr.endIndex+1);
+							ptr.sibling=newNode;
+							break;
+							}
+						}
+					//leaf node
+					else {
+						
+						newNode.substr.startIndex = (short)(common+1);
+						ptr.substr.endIndex = (short)common;
+						Indexes ac = new Indexes(ptr.substr.wordIndex,(short)(ptr.substr.endIndex+1),(short)(allWords[ptr.substr.wordIndex].length()-1));
+						TrieNode addedChild = new TrieNode(ac,null,newNode);
+						ptr.firstChild = addedChild;
+						break;
+					}
+				}
+				else{
+					prev=ptr;
+					ptr=ptr.sibling;
+					}
+				}
+				if(ptr == null) {
+				prev.sibling=newNode;
+				}
+			}
+		return root;
+		}
+
+	
+	
+	//get the end index of prefix
+	private static int prefixEnd(TrieNode newNode, TrieNode current, String[] allWords) {
+		int count = -1;
+		String newWord = allWords[newNode.substr.wordIndex];
+		String word = allWords[current.substr.wordIndex];
+		
+		if(newWord.length()>word.length()) {
+			for(int i=0; i<word.length();i++) {
+				if(newWord.charAt(i) == word.charAt(i)) {
+					count++;
+					continue;
+				}
+				else {
+					break;
+				}
+			}
+		}
+		else{
+			for(int i=0; i<newWord.length();i++) {
+				if(newWord.charAt(i) == word.charAt(i)) {
+					count++;
+					continue;
+				}
+				else {
+					break;
+				}
+			}
+		}
+		
+		return count;		
 	}
+	
 	
 	/**
 	 * Given a trie, returns the "completion list" for a prefix, i.e. all the leaf nodes in the 
@@ -49,11 +148,83 @@ public class Trie {
 	 */
 	public static ArrayList<TrieNode> completionList(TrieNode root,
 										String[] allWords, String prefix) {
-		/** COMPLETE THIS METHOD **/
 		
-		// FOLLOWING LINE IS A PLACEHOLDER TO ENSURE COMPILATION
-		// MODIFY IT AS NEEDED FOR YOUR IMPLEMENTATION
+		ArrayList<TrieNode> matches = new ArrayList<TrieNode>();
+		
+		if(root.firstChild == null || prefix.length()==0 ) {
+			return matches;
+		}
+		
+		TrieNode ptr = root.firstChild;
+		
+		while(ptr != null) {
+			
+			int subStart = ptr.substr.startIndex;
+			int subEnd = ptr.substr.endIndex;
+			
+			if (prefix.charAt(subStart) == allWords[ptr.substr.wordIndex].charAt(subStart)) {
+				
+				int index = ptr.substr.startIndex +1;
+				boolean check = true;
+				
+				while(index <= subEnd && index<prefix.length()) {
+					if(prefix.charAt(index) == allWords[ptr.substr.wordIndex].charAt(index)) {
+						index++;
+					}
+					else {
+						check = false;
+						break;
+					}
+				}
+				
+				//no words with common prefix
+				if (check == false) {
+					return null;
+				}
+				
+				//ptr holds entire prefix 
+				if(index == prefix.length()) {
+					
+					//if ptr is leaf node then its the only common word
+					if (ptr.firstChild == null) {
+						matches.add(ptr);
+						return matches;
+					}
+					//if ptr is internal node get all leaves of its subtree
+					else {
+					matches = getLeaves(ptr.firstChild, matches);
+					return matches;
+					}
+				}
+				//ptr holds part of prefix
+				else {
+					ptr = ptr.firstChild;
+					continue;
+				}	
+			}
+			else {
+				ptr = ptr.sibling;
+			}	
+		}
 		return null;
+	}
+	
+	private static ArrayList<TrieNode> getLeaves(TrieNode node, ArrayList<TrieNode> matches){
+		
+		TrieNode ptr = node;
+		
+		while(ptr != null) {
+			System.out.print(ptr.substr);
+			if(ptr.firstChild == null) {
+				matches.add(ptr);
+			}
+			else {
+				matches = getLeaves(ptr.firstChild,matches);
+			}
+			ptr = ptr.sibling;		
+		}
+
+		return matches;
 	}
 	
 	public static void print(TrieNode root, String[] allWords) {

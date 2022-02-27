@@ -25,10 +25,11 @@ This application:
 
 ### Executing Program
 
-The program may be executed using the supplied TrieApp driver. It first asks for the name of an input file of words, with which it builds a trie by calling the Trie.buuldTree
+The program may be executed using the supplied TrieApp driver. It first asks for the name of an input file of words, with which it builds a trie by calling the Trie.buildTree
 method. After the trie is built, it asks for search prefixes for which it computes completion lists, calling the Trie.completionList method.
 
-Some example text files are provided: words0.txt, words1.txt, words2.txt, words3.txt, words4.txt). 
+Some example text files are provided: words0.txt, words1.txt, words2.txt, words3.txt, words4.txt 
+
 The first line of a word file is the number of the words, and the subsequent lines are the words, one per line.
 
 ### Sample Run
